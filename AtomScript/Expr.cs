@@ -21,6 +21,22 @@ namespace AtomScript {
         }
     }
 
+    class Logical : Expr {
+        public Expr left;
+        public Token op;
+        public Expr right;
+
+        public Logical(Expr left, Token op, Expr right) {
+            this.left = left;
+            this.op = op;
+            this.right = right;
+        }
+
+        public override string ToString() {
+            return left + op.lexeme + right;
+        }
+    }
+
     class Binary : Expr {
         public Expr left;
         public Token op;
@@ -58,6 +74,32 @@ namespace AtomScript {
 
         public override string ToString() {
             return "(" + expression + ")";
+        }
+    }
+
+    class Variable : Expr {
+        public Token name;
+
+        public Variable(Token name) {
+            this.name = name;
+        }
+
+        public override string ToString() {
+            return name.lexeme;
+        }
+    }
+
+    class Assign : Expr {
+        public Token name;
+        public Expr value;
+
+        public Assign(Token name, Expr value) {
+            this.name = name;
+            this.value = value;
+        }
+
+        public override string ToString() {
+            return name.lexeme + " = " + value.ToString();
         }
     }
 }

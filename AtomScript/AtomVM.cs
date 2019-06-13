@@ -74,27 +74,29 @@ namespace AtomScript
             }
 
             if (scanRes.success) {
-                result.success = true;
+                SyntaxParser parser = new SyntaxParser();
+                SyntaxResult parseRes = parser.Parse(scanRes.tokens);
+                if (parseRes.success) {
+                    List<Stmt> stmts = parseRes.statements;
+                    for (int i = 0; i < stmts.Count; i++) {
+                        Console.WriteLine(stmts[i]);
+                    }
+                   
+                    result.success = true;
+                } else {
+                    result.success = false;
+                    List<SyntaxError> errors = parseRes.errors;
+                    for (int i = 0; i < errors.Count; i++) {
+                        Report(errors[i].line, errors[i].column, errors[i].errorStr);
+                    }
+                }
             } else {
                 result.success = false;
                 List<ScanError> errors = scanRes.errors;
                 for (int i = 0; i < errors.Count; i++) {
-                    Error(errors[i].line, errors[i].errorStr);
+                    Report(errors[i].line, errors[i].column, errors[i].errorStr);
                 }
             }
-
-            Expr expr = new Binary(
-                new Unary(
-                    new Token(TokenType.MINUS, "-", null, 1, 1),
-                    new Literal(123)
-                ),
-                new Token(TokenType.STAR, "*", null, 1, 1),
-                new Grouping(
-                    new Literal(45.67)
-                )
-            );
-
-            Console.WriteLine(expr);
 
             return result;
         }
@@ -105,12 +107,8 @@ namespace AtomScript
             return result;
         }
 
-        public void Error(int line, string message) {
-            Report(line, "", message);
-        }
-
-        public string Report(int line, string where, string message) {
-            return "[line ]" + line + "] Error" + where + ": " + message;
+        public void Report(int line, int column, string message) {
+            Console.WriteLine("[position " + line + ":" + column + "] " +message);
         }
     }
 }

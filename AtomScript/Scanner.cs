@@ -311,7 +311,7 @@ namespace AtomScript {
 
         private void ReportError(int line, int column, string errorStr) {
             success = false;
-            errors.Add(new ScanError(line, column, errorStr));
+            errors.Add(new ScanError(line, column, "SyntaxError: " + errorStr));
         }
     }
 }
