@@ -8,7 +8,7 @@ using AtomScript.Parser;
 
 namespace AtomScript
 {
-    class Runner
+    class Program
     {
         static void Main(string[] args)
         {
@@ -17,24 +17,24 @@ namespace AtomScript
                 Environment.Exit(1);
             }
 
-            Runner runner = new Runner();
-            runner.Start();
+            Program program = new Program();
+            program.Start();
             if (args.Length == 1) {
-                runner.Run();
+                program.Run();
             } else if (args.Length == 2) {
-                runner.RunFile(args[1]);
+                program.RunFile(args[1]);
             } else {
-                runner.RunFile("main.atom");
+                program.RunFile("main.atom");
             }
-            runner.Close();
+            program.Close();
         }
 
         public void Start() {
-            Console.WriteLine("Runner Start.");
+            Console.WriteLine("Program Start.");
         }
 
         public void Close() {
-            Console.WriteLine("Runner Close.");
+            Console.WriteLine("Program Close.");
         }
 
         public void Run() {
