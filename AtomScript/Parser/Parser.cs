@@ -1,46 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
-namespace AtomScript {
+using AtomScript.Scanner;
+using AtomScript.AST.Expression;
+using AtomScript.AST.Statement;
 
-    class SyntaxError {
-        public int line;
-        public int column;
-        public string errorStr;
+namespace AtomScript.Parser {
 
-        public SyntaxError(int line, int column, string errorStr) {
-            this.line = line;
-            this.column = column;
-            this.errorStr = errorStr;
-        }
-    }
-
-    class SyntaxResult {
-        public bool success;
-        public List<SyntaxError> errors;
-        public List<Stmt> statements;
-    }
-
-    class SyntaxParser {
+    class Parser {
         private List<Token> tokens;
         private int current;
         private bool success;
         private List<SyntaxError> errors;
         private Stmt statements;
 
-        public SyntaxResult Parse(List<Token> tokens) {
+        public ParseResult Parse(List<Token> tokens) {
             Reset();
             this.tokens = tokens;
             List<Stmt> statements = new List<Stmt>();
             while (IsAtEnd() == false) {
                 statements.Add(MatchDeclaration());
             }
-            SyntaxResult result = new SyntaxResult();
-            result.success = success;
-            result.errors = errors;
-            result.statements = statements;
-            return result;
+            return new ParseResult(success, statements, errors);
         }
 
         private void Reset() {
@@ -95,6 +76,7 @@ namespace AtomScript {
         private Stmt MatchStatement() {
             if (Match(TokenType.IF)) return MatchIfStmt();
             if (Match(TokenType.PRINT)) return MatchPrintStmt();
+            if (Match(TokenType.WHILE)) return MatchWhileStmt();
             if (Match(TokenType.LEFT_BRACE)) return MatchBlockStmt();
 
             return MatchExpressionStmt();
@@ -103,7 +85,7 @@ namespace AtomScript {
         private Stmt MatchExpressionStmt() {
             Expr expr = MatchExpression();
             Consume(TokenType.SEMICOLON, "Expect ';' after expression.");
-            return new Expression(expr);
+            return new ExpressionStmt(expr);
         }
 
         private Stmt MatchIfStmt() {
@@ -117,13 +99,22 @@ namespace AtomScript {
                 elseBranch = MatchStatement();
             }
 
-            return new If(condition, thenBranch, elseBranch);
+            return new IfStmt(condition, thenBranch, elseBranch);
         }
 
         private Stmt MatchPrintStmt() {
             Expr expr = MatchExpression();
             Consume(TokenType.SEMICOLON, "Expect ';' after value.");
-            return new Print(expr);
+            return new PrintStmt(expr);
+        }
+
+        private Stmt MatchWhileStmt() {
+            Consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.");
+            Expr condition = MatchExpression();
+            Consume(TokenType.RIGHT_PAREN, "Expect ')' after condition.");
+            Stmt body = MatchStatement();
+
+            return new WhileStmt(condition, body);
         }
 
         private Stmt MatchBlockStmt() {
@@ -132,7 +123,7 @@ namespace AtomScript {
                 stmts.Add(MatchDeclaration());
             }
             Consume(TokenType.RIGHT_BRACE, "Expect '}' after block.");
-            Block block = new Block(stmts);
+            BlockStmt block = new BlockStmt(stmts);
             return block;
         }
 
@@ -151,7 +142,7 @@ namespace AtomScript {
 
 
             Consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.");
-            return new Var(name, initializer);
+            return new VarDeclarationStmt(name, initializer);
         }
 
         private Expr MatchExpression() {
@@ -165,9 +156,9 @@ namespace AtomScript {
                 Token equal = ReadPrevToken();
                 Expr value = MatchAssignment();
 
-                if (expr.GetType() == typeof(Variable)) {
-                    Token name = ((Variable)expr).name;
-                    return new Assign(name, value);
+                if (expr.GetType() == typeof(VariableExpr)) {
+                    Token name = ((VariableExpr)expr).name;
+                    return new AssignExpr(name, value);
                 }
 
                 ReportError("Invalid assignment target.");
@@ -182,7 +173,7 @@ namespace AtomScript {
             while (Match(TokenType.OR)) {
                 Token op = ReadPrevToken();
                 Expr right = MatchLogicAnd();
-                expr = new Binary(expr, op, right);
+                expr = new BinaryExpr(expr, op, right);
             }
 
             return expr;
@@ -194,7 +185,7 @@ namespace AtomScript {
             while (Match(TokenType.AND)) {
                 Token op = ReadPrevToken();
                 Expr right = MatchEquality();
-                expr = new Binary(expr, op, right);
+                expr = new BinaryExpr(expr, op, right);
             }
 
             return expr;
@@ -206,7 +197,7 @@ namespace AtomScript {
             while (MatchOne(new TokenType[] { TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL })) {
                 Token op = ReadPrevToken();
                 Expr right = MatchComparison();
-                expr = new Binary(expr, op, right);
+                expr = new BinaryExpr(expr, op, right);
             }
 
             return expr;
@@ -218,7 +209,7 @@ namespace AtomScript {
             while (MatchOne(new TokenType[] { TokenType.GREATER, TokenType.GREATER_EQUAL, TokenType.LESS, TokenType.LESS_EQUAL })) {
                 Token op = ReadPrevToken();
                 Expr right = MatchAddition();
-                expr = new Binary(expr, op, right);
+                expr = new BinaryExpr(expr, op, right);
             }
 
             return expr;
@@ -230,7 +221,7 @@ namespace AtomScript {
             while (MatchOne(new TokenType[] { TokenType.MINUS, TokenType.PLUS })) {
                 Token op = ReadPrevToken();
                 Expr right = MatchMultiplication();
-                expr = new Binary(expr, op, right);
+                expr = new BinaryExpr(expr, op, right);
             }
 
             return expr;
@@ -242,7 +233,7 @@ namespace AtomScript {
             while (MatchOne(new TokenType[] { TokenType.SLASH, TokenType.STAR })) {
                 Token op = ReadPrevToken();
                 Expr right = MatchUnary();
-                expr = new Binary(expr, op, right);
+                expr = new BinaryExpr(expr, op, right);
             }
 
             return expr;
@@ -252,27 +243,23 @@ namespace AtomScript {
             if (MatchOne(new TokenType[] { TokenType.BANG, TokenType.MINUS })) {
                 Token op = ReadPrevToken();
                 Expr right = MatchUnary();
-                return new Unary(op, right);
+                return new UnaryExpr(op, right);
             }
 
             return MatchPrimary();
         }
 
         private Expr MatchPrimary() {
-            if (Match(TokenType.TRUE)) return new Literal(true);
-            if (Match(TokenType.FALSE)) return new Literal(false);
-            if (Match(TokenType.NIL)) return new Literal(null);
-
-            if (MatchOne(new TokenType[] { TokenType.NUMBER, TokenType.STRING })) {
-                return new Literal(ReadPrevToken().literal);
+            if (MatchOne(new TokenType[] { TokenType.TRUE, TokenType.FALSE, TokenType.NIL, TokenType.NUMBER, TokenType.STRING })) {
+                return new LiteralExpr(ReadPrevToken());
             };
 
-            if (Match(TokenType.IDENTIFIER)) return new Variable(ReadPrevToken());
+            if (Match(TokenType.IDENTIFIER)) return new VariableExpr(ReadPrevToken());
 
             if (Match(TokenType.LEFT_PAREN)) {
                 Expr expr = MatchExpression();
                 Consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.");
-                return new Grouping(expr);
+                return new GroupingExpr(expr);
             }
 
             ReportError("Expect expression.");
@@ -285,8 +272,7 @@ namespace AtomScript {
             } else {
                 ReportError(message);
                 return null;
-            }
-            
+            }            
         }
 
         private void ReportError(string message) {

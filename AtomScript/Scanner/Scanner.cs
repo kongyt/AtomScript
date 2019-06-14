@@ -1,26 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
-namespace AtomScript {
-
-    class ScanError {
-        public int line;
-        public int column;
-        public string errorStr;
-
-        public ScanError(int line, int column, string errorStr) {
-            this.line = line;
-            this.column = column;
-            this.errorStr = errorStr;
-        }
-    }
-
-    class ScanResult {
-        public bool success;
-        public List<ScanError> errors;
-        public List<Token> tokens;
-    }
+namespace AtomScript.Scanner {
 
     class Scanner {
 
@@ -45,7 +26,7 @@ namespace AtomScript {
         private string source;
         private bool success;
         private List<Token> tokens;
-        private List<ScanError> errors;
+        private List<LexicalError> errors;
         private int start;
         private int current;
         private int line;
@@ -56,7 +37,7 @@ namespace AtomScript {
             source = null;
             success = true;
             tokens = new List<Token>();
-            errors = new List<ScanError>();
+            errors = new List<LexicalError>();
             start = 0;
             current = 0;
             line = 1;
@@ -71,11 +52,7 @@ namespace AtomScript {
                 ScanToken();
             }
             MakeToken(TokenType.EOF);
-            ScanResult res = new ScanResult();
-            res.success = success;
-            res.errors = errors;
-            res.tokens = tokens;
-            return res;
+            return new ScanResult(success, tokens, errors);
         }
 
         private void ScanToken() {
@@ -309,9 +286,9 @@ namespace AtomScript {
             }
         }
 
-        private void ReportError(int line, int column, string errorStr) {
+        private void ReportError(int line, int column, string message) {
             success = false;
-            errors.Add(new ScanError(line, column, "SyntaxError: " + errorStr));
+            errors.Add(new LexicalError(line, column, "LexicalError: " + message));
         }
     }
 }

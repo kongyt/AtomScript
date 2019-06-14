@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+namespace AtomScript.Scanner {
 
-namespace AtomScript {
     class Token {
         public TokenType type;
         public string lexeme;
@@ -18,8 +15,6 @@ namespace AtomScript {
             this.column = column;
         }
 
-        public override string ToString() {
-            return "[" + type + ", " + lexeme + ", " + literal + ", " + line + ", " + column + "]";
-        }
     }
+
 }

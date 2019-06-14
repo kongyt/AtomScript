@@ -2,9 +2,14 @@
 using System.IO;
 using System.Collections.Generic;
 
+using AtomScript.AST.Expression;
+using AtomScript.AST.Statement;
+using AtomScript.Scanner;
+using AtomScript.Parser;
+
 namespace AtomScript
 {
-    class AtomVM
+    class Runner
     {
         static void Main(string[] args)
         {
@@ -13,24 +18,24 @@ namespace AtomScript
                 Environment.Exit(1);
             }
 
-            AtomVM vm = new AtomVM();
-            vm.Start();
+            Runner runner = new Runner();
+            runner.Start();
             if (args.Length == 1) {
-                vm.Run();
+                runner.Run();
             } else if (args.Length == 2) {
-                vm.RunFile(args[1]);
+                runner.RunFile(args[1]);
             } else {
-                vm.RunFile("main.atom");
+                runner.RunFile("main.atom");
             }
-            vm.Close();
+            runner.Close();
         }
 
         public void Start() {
-            Console.WriteLine("AtomVM Start.");
+            Console.WriteLine("Runner Start.");
         }
 
         public void Close() {
-            Console.WriteLine("AtomVM Close.");
+            Console.WriteLine("Runner Close.");
         }
 
         public void Run() {
@@ -66,35 +71,38 @@ namespace AtomScript
         private CompileResult Compile(string source) {
             CompileResult result = new CompileResult();
 
-            Scanner scanner = new Scanner();
+            Scanner.Scanner scanner = new Scanner.Scanner();
             ScanResult scanRes = scanner.ScanTokens(source);
+            Console.WriteLine("=========== Tokens ==========");
             List<Token> tokens = scanRes.tokens;
             for (int i = 0; i < tokens.Count; i++) {
                 Console.WriteLine(tokens[i]);
             }
 
             if (scanRes.success) {
-                SyntaxParser parser = new SyntaxParser();
-                SyntaxResult parseRes = parser.Parse(scanRes.tokens);
+                Parser.Parser parser = new Parser.Parser();
+                ParseResult parseRes = parser.Parse(scanRes.tokens);
                 if (parseRes.success) {
+                    Console.WriteLine("=========== Code ==========");
                     List<Stmt> stmts = parseRes.statements;
                     for (int i = 0; i < stmts.Count; i++) {
                         Console.WriteLine(stmts[i]);
                     }
-                   
+                    Console.WriteLine("============ End ==========");
+
                     result.success = true;
                 } else {
                     result.success = false;
                     List<SyntaxError> errors = parseRes.errors;
                     for (int i = 0; i < errors.Count; i++) {
-                        Report(errors[i].line, errors[i].column, errors[i].errorStr);
+                        Report(errors[i].line, errors[i].column, errors[i].message);
                     }
                 }
             } else {
                 result.success = false;
-                List<ScanError> errors = scanRes.errors;
+                List<LexicalError> errors = scanRes.errors;
                 for (int i = 0; i < errors.Count; i++) {
-                    Report(errors[i].line, errors[i].column, errors[i].errorStr);
+                    Report(errors[i].line, errors[i].column, errors[i].message);
                 }
             }
 
