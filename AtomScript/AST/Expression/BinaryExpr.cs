@@ -13,7 +13,7 @@ namespace AtomScript.AST.Expression {
             this.right = right;
         }
 
-        public override void Accept(ASTVisitor visitor) {
+        public override void Accept(AstVisitor visitor) {
             visitor.Visit(this);
         }
     }

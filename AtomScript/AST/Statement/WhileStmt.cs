@@ -11,7 +11,7 @@ namespace AtomScript.AST.Statement {
             this.body = body;
         }
 
-        public override void Accept(ASTVisitor visitor) {
+        public override void Accept(AstVisitor visitor) {
             visitor.Visit(this);
         }
     }

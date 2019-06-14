@@ -13,7 +13,7 @@ namespace AtomScript.AST.Statement {
             this.elseBranch = elseBranch;
         }
 
-        public override void Accept(ASTVisitor visitor) {
+        public override void Accept(AstVisitor visitor) {
             visitor.Visit(this);
         }
     }

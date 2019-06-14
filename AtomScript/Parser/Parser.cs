@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 
 using AtomScript.Scanner;
+using AtomScript.AST;
 using AtomScript.AST.Expression;
 using AtomScript.AST.Statement;
 
@@ -12,7 +13,7 @@ namespace AtomScript.Parser {
         private int current;
         private bool success;
         private List<SyntaxError> errors;
-        private Stmt statements;
+        private Ast ast;
 
         public ParseResult Parse(List<Token> tokens) {
             Reset();
@@ -21,7 +22,8 @@ namespace AtomScript.Parser {
             while (IsAtEnd() == false) {
                 statements.Add(MatchDeclaration());
             }
-            return new ParseResult(success, statements, errors);
+            ast = new Ast(new BlockStmt(statements));
+            return new ParseResult(success, ast, errors);
         }
 
         private void Reset() {

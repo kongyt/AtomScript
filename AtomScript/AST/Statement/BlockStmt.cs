@@ -10,7 +10,7 @@ namespace AtomScript.AST.Statement {
             this.stmts = stmts;
         }
 
-        public override void Accept(ASTVisitor visitor) {
+        public override void Accept(AstVisitor visitor) {
             visitor.Visit(this);
         }
     }

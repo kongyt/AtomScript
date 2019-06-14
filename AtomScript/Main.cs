@@ -2,8 +2,7 @@
 using System.IO;
 using System.Collections.Generic;
 
-using AtomScript.AST.Expression;
-using AtomScript.AST.Statement;
+using AtomScript.AST;
 using AtomScript.Scanner;
 using AtomScript.Parser;
 
@@ -76,7 +75,7 @@ namespace AtomScript
             Console.WriteLine("=========== Tokens ==========");
             List<Token> tokens = scanRes.tokens;
             for (int i = 0; i < tokens.Count; i++) {
-                Console.WriteLine(tokens[i]);
+                Console.WriteLine("" + tokens[i].line + " " + tokens[i].column + " " + tokens[i].type + " " + tokens[i].lexeme);
             }
 
             if (scanRes.success) {
@@ -84,10 +83,8 @@ namespace AtomScript
                 ParseResult parseRes = parser.Parse(scanRes.tokens);
                 if (parseRes.success) {
                     Console.WriteLine("=========== Code ==========");
-                    List<Stmt> stmts = parseRes.statements;
-                    for (int i = 0; i < stmts.Count; i++) {
-                        Console.WriteLine(stmts[i]);
-                    }
+                    Ast ast= parseRes.ast;
+                    new AstPrinter().Print(ast);
                     Console.WriteLine("============ End ==========");
 
                     result.success = true;

@@ -1,17 +1,16 @@
 using System.Collections.Generic;
-using AtomScript.AST.Expression;
-using AtomScript.AST.Statement;
+using AtomScript.AST;
 
 namespace AtomScript.Parser {
 
     class ParseResult {
         public bool success;
-        public List<Stmt> statements;
+        public Ast ast;
         public List<SyntaxError> errors;
 
-        public ParseResult(bool success, List<Stmt> statements, List<SyntaxError> errors) {
+        public ParseResult(bool success, Ast ast, List<SyntaxError> errors) {
             this.success = success;
-            this.statements = statements;
+            this.ast = ast;
             this.errors = errors;
         }
 

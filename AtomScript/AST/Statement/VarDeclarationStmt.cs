@@ -12,7 +12,7 @@ namespace AtomScript.AST.Statement {
             this.initializer = initializer;
         }
 
-        public override void Accept(ASTVisitor visitor) {
+        public override void Accept(AstVisitor visitor) {
             visitor.Visit(this);
         }
     }

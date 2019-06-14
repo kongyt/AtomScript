@@ -21,15 +21,13 @@ def gen_syntax_error():
 def gen_parse_result():
     out_dir = "../" + baseDir + "/Parser/"
     ns = baseNS + ".Parser"
-    usingExpr = baseNS + ".AST.Expression"
-    usingStmt = baseNS + ".AST.Statement"
+    usingAst = baseNS + ".AST"
 
     c = CommonClass(ns, "ParseResult", None)
     c.addUsing("System.Collections.Generic")
-    c.addUsing(usingExpr)
-    c.addUsing(usingStmt)
+    c.addUsing(usingAst)
     c.addProp("bool", "success")
-    c.addProp("List<Stmt>", "statements")
+    c.addProp("Ast", "ast")
     c.addProp("List<SyntaxError>", "errors")
     c.writeTo(out_dir + c.className + ".cs")
 

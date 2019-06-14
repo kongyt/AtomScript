@@ -7,7 +7,7 @@ namespace AtomScript.AST.Expression {
             this.expression = expression;
         }
 
-        public override void Accept(ASTVisitor visitor) {
+        public override void Accept(AstVisitor visitor) {
             visitor.Visit(this);
         }
     }

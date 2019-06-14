@@ -3,7 +3,7 @@ using AtomScript.AST.Statement;
 
 namespace AtomScript.AST {
 
-    abstract class ASTVisitor {
+    abstract class AstVisitor {
 
         public virtual void Visit(UnaryExpr expr) {
 

@@ -2,14 +2,14 @@ using AtomScript.AST.Statement;
 
 namespace AtomScript.AST {
 
-    class AST : IVisitable {
+    class Ast : IVisitable {
         public Stmt root;
 
-        public AST(Stmt root) {
+        public Ast(Stmt root) {
             this.root = root;
         }
 
-        public void Accept(ASTVisitor visitor) {
+        public void Accept(AstVisitor visitor) {
             root.Accept(visitor);
         }
     }

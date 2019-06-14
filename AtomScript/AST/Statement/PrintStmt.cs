@@ -9,7 +9,7 @@ namespace AtomScript.AST.Statement {
             this.expr = expr;
         }
 
-        public override void Accept(ASTVisitor visitor) {
+        public override void Accept(AstVisitor visitor) {
             visitor.Visit(this);
         }
     }

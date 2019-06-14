@@ -7,13 +7,14 @@ using AtomScript.AST.Statement;
 using AtomScript.Scanner;
 
 namespace AtomScript.AST {
-    class ASTPrinter : ASTVisitor {
+    class AstPrinter : AstVisitor {
 
         private string astStr;
 
-        public string Print(AST ast) {
+        public string Print(Ast ast) {
             astStr = "";
             ast.Accept(this);
+            Console.WriteLine(astStr);
             return astStr;
         }
 
@@ -55,28 +56,49 @@ namespace AtomScript.AST {
         }
 
         public override void Visit(ExpressionStmt stmt) {
-            stmt.Accept(this);
-            astStr += ";";
+            stmt.expr.Accept(this);
+            astStr += ";\n";
         }
 
         public override void Visit(IfStmt stmt) {
-
+            astStr += "if (";
+            stmt.condition.Accept(this);
+            astStr += ") \n";
+            stmt.thenBranch.Accept(this);
+            if (stmt.elseBranch != null) {
+                astStr += "else\n";
+                stmt.elseBranch.Accept(this);
+            }
         }
 
         public override void Visit(PrintStmt stmt) {
-
+            astStr = astStr + "print ";
+            stmt.expr.Accept(this); 
+            astStr += ";\n";
         }
 
         public override void Visit(WhileStmt stmt) {
-
+            astStr += "while(";
+            stmt.condition.Accept(this);
+            astStr += ")\n";
+            stmt.body.Accept(this);
         }
 
         public override void Visit(VarDeclarationStmt stmt) {
-
+            astStr += "var " + stmt.name.lexeme;
+            if (stmt.initializer != null) {
+                astStr += " = ";
+                stmt.initializer.Accept(this);
+                astStr += ";\n";
+            }
         }
 
         public override void Visit(BlockStmt stmt) {
-
+            astStr += "{\n";
+            for (int i = 0; i < stmt.stmts.Count; i++) {
+                stmt.stmts[i].Accept(this);
+            }
+            astStr += "}\n";
         }
     }
 }
