@@ -6,24 +6,6 @@ namespace AtomScript.Scanner {
 
     class Scanner {
 
-        private static Dictionary<string, TokenType> keywords = new Dictionary<string, TokenType>(){
-            { "and", TokenType.AND },
-            { "class", TokenType.CLASS },
-            { "else", TokenType.ELSE },
-            { "false", TokenType.FALSE },
-            { "for", TokenType.FOR },
-            { "func", TokenType.FUNC },
-            { "if", TokenType.IF },
-            { "nil", TokenType.NIL },
-            { "or", TokenType.OR },
-            { "print", TokenType.PRINT },
-            { "return", TokenType.RETURN },
-            { "super", TokenType.SUPER },
-            { "this", TokenType.THIS },
-            { "var", TokenType.VAR },
-            { "while", TokenType.WHILE }
-        };
-
         private string source;
         private bool success;
         private List<Token> tokens;
@@ -104,16 +86,13 @@ namespace AtomScript.Scanner {
                             ReportError(line, column, "Unexpected character. (" + c + ")");
                         }
                     } else if (IsAlpha(c)) {
-                        if (MatchWord()) {
-                            string text = ReadText();
-                            if (IsKeyword(text)) {
-                                MakeToken(keywords[text]);
-                            } else {
-                                MakeToken(TokenType.IDENTIFIER);
-                            }
+                        if (MatchAndMakeKeywords(c)) {
+                            break;
+                        } else if (MatchWord()) {
+                            MakeToken(TokenType.IDENTIFIER);
                         } else {
                             ReportError(line, column, "Unexpected character. (" + c + ")");
-                        }
+                        }                       
                     } else {
                         ReportError(line, column, "Unexpected character. (" + c + ")");
                     }
@@ -174,10 +153,6 @@ namespace AtomScript.Scanner {
             return IsAlpha(c) || IsDigit(c);
         }
 
-        private bool IsKeyword(string text) {
-            return keywords.ContainsKey(text);
-        }
-
         private bool MatchChar(char expected) {
             if (ReadNextChar() == expected) {
                 Advance();
@@ -185,6 +160,42 @@ namespace AtomScript.Scanner {
             } else {
                 return false;
             }
+        }
+
+        private bool MatchAndMakeKeywords(char c) {
+            switch (c) {
+                case 'a': return MatchKeyword("nd", TokenType.AND);
+                case 'c': return MatchKeyword("lass", TokenType.CLASS);
+                case 'e': return MatchKeyword("lse", TokenType.ELSE);
+                case 'f': return MatchKeyword("alse", TokenType.FALSE) || MatchKeyword("or", TokenType.FOR) || MatchKeyword("unc", TokenType.FUNC);
+                case 'i': return MatchKeyword("f", TokenType.IF);
+                case 'n': return MatchKeyword("il", TokenType.NIL);
+                case 'o': return MatchKeyword("r", TokenType.OR);
+                case 'p': return MatchKeyword("rint", TokenType.PRINT);
+                case 'r': return MatchKeyword("eturn", TokenType.RETURN);
+                case 's': return MatchKeyword("uper", TokenType.SUPER);
+                case 't': return MatchKeyword("his", TokenType.THIS);
+                case 'v': return MatchKeyword("ar", TokenType.VAR);
+                case 'w': return MatchKeyword("hile", TokenType.WHILE);
+            }
+            return false;
+        }
+
+        private bool MatchKeyword(string rest, TokenType type) {
+            int length = rest.Length;
+            if (this.current + length >= this.source.Length) {
+                return false;
+            }
+
+            for (int i = 0; i < length; i++) {
+                if (source[current + i] != rest[i]) {
+                    return false;
+                }
+            }
+            current += length;
+            column += length;
+            MakeToken(type);
+            return true;
         }
 
         private bool MatchString() {
