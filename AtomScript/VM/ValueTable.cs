@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿namespace AtomScript.VM {
 
-namespace AtomScript {
-
-    public class ValueTable<T> {
+    public class ValueTable {
         public int count;
         public int capacity;
-        public T[] data;
+        public Value[] data;
 
         public void Reset() {
             count = 0;

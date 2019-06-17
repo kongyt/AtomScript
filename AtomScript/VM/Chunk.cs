@@ -2,18 +2,18 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace AtomScript {
+namespace AtomScript.VM {
     class Chunk {
         public int count;
         public int capacity;
         public byte[] code;
-        public ValueTable<double> doubleValue = new ValueTable<double>();
+        public ValueTable valueTable = new ValueTable();
 
         public void Reset() {
             count = 0;
             capacity = 0;
             code = null;
-            doubleValue.Reset();
+            valueTable.Reset();
         }
 
         public void Write(OpCode opCode) {
@@ -52,7 +52,7 @@ namespace AtomScript {
 
             OpCode instruction = (OpCode)code[offset];
             switch (instruction) {
-                case OpCode.RETURN:
+                case OpCode.OP_RETURN:
                     return SimpleInstruction("OP_RETURN", offset);
                 default:
                     return UnkownInstruction(instruction, offset);
