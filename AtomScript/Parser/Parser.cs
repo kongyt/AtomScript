@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
-using AtomScript.Scanner;
 using AtomScript.AST;
 using AtomScript.AST.Expression;
 using AtomScript.AST.Statement;
@@ -22,7 +20,7 @@ namespace AtomScript.Parser {
             while (IsAtEnd() == false) {
                 statements.Add(MatchDeclaration());
             }
-            ast = new Ast(new BlockStmt(statements));
+            ast = new Ast(statements);
             return new ParseResult(success, ast, errors);
         }
 
@@ -76,21 +74,50 @@ namespace AtomScript.Parser {
         }
 
         private Stmt MatchStatement() {
+            if (Match(TokenType.FOR)) return MatchForStmt();
             if (Match(TokenType.IF)) return MatchIfStmt();
             if (Match(TokenType.PRINT)) return MatchPrintStmt();
+            if (Match(TokenType.RETURN)) return MatchReturnStmt();
             if (Match(TokenType.WHILE)) return MatchWhileStmt();
             if (Match(TokenType.LEFT_BRACE)) return MatchBlockStmt();
 
             return MatchExpressionStmt();
         }
 
-        private Stmt MatchExpressionStmt() {
+        private ExpressionStmt MatchExpressionStmt() {
             Expr expr = MatchExpression();
             Consume(TokenType.SEMICOLON, "Expect ';' after expression.");
             return new ExpressionStmt(expr);
         }
 
-        private Stmt MatchIfStmt() {
+        private ForStmt MatchForStmt() {
+            Consume(TokenType.LEFT_PAREN, "Expect '(' after 'for'.");
+            Stmt initializer;
+            if (Match(TokenType.SEMICOLON)) {
+                initializer = null;
+            } else if (Match(TokenType.VAR)) {
+                initializer = MatchVarDeclaration();
+            } else {
+                initializer = MatchExpressionStmt();
+            }
+
+            Expr condition = null;
+            if (Check(TokenType.SEMICOLON) == false) {
+                condition = MatchExpression();
+            }
+            Consume(TokenType.SEMICOLON, "Expect ';' after loop condition.");
+
+            Expr increment = null;
+            if (Check(TokenType.RIGHT_PAREN) == false) {
+                increment = MatchExpression();
+            }
+            Consume(TokenType.RIGHT_PAREN, "Expect ')' after clauses.");
+
+            Stmt body = MatchStatement();
+            return new ForStmt(initializer, condition, increment, body);
+        }
+
+        private IfStmt MatchIfStmt() {
             Consume(TokenType.LEFT_PAREN, "Expect '(' after 'if'.");
             Expr condition = MatchExpression();
             Consume(TokenType.RIGHT_PAREN, "Expect ')' after if condition.");
@@ -104,13 +131,23 @@ namespace AtomScript.Parser {
             return new IfStmt(condition, thenBranch, elseBranch);
         }
 
-        private Stmt MatchPrintStmt() {
+        private PrintStmt MatchPrintStmt() {
             Expr expr = MatchExpression();
             Consume(TokenType.SEMICOLON, "Expect ';' after value.");
             return new PrintStmt(expr);
         }
 
-        private Stmt MatchWhileStmt() {
+        private ReturnStmt MatchReturnStmt() {
+            Token keyword = ReadPrevToken();
+            Expr value = null;
+            if (Check(TokenType.SEMICOLON) == false) {
+                value = MatchExpression();
+            }
+            Consume(TokenType.SEMICOLON, "Expect ';' after return value.");
+            return new ReturnStmt(keyword, value);
+        }
+
+        private WhileStmt MatchWhileStmt() {
             Consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.");
             Expr condition = MatchExpression();
             Consume(TokenType.RIGHT_PAREN, "Expect ')' after condition.");
@@ -119,7 +156,7 @@ namespace AtomScript.Parser {
             return new WhileStmt(condition, body);
         }
 
-        private Stmt MatchBlockStmt() {
+        private BlockStmt MatchBlockStmt() {
             List<Stmt> stmts = new List<Stmt>();
             while (Check(TokenType.RIGHT_BRACE) == false && IsAtEnd() == false) {
                 stmts.Add(MatchDeclaration());
@@ -130,11 +167,53 @@ namespace AtomScript.Parser {
         }
 
         private Stmt MatchDeclaration() {
+            if (Match(TokenType.CLASS)) return MatchClassDeclaration();
+            if (Match(TokenType.FUNC)) return MatchFuncDeclaration("function");
             if (Match(TokenType.VAR)) return MatchVarDeclaration();
             return MatchStatement();
         }
 
-        private Stmt MatchVarDeclaration() {
+        private ClassDeclarationStmt MatchClassDeclaration() {
+            Token name = Consume(TokenType.IDENTIFIER, "Expect class name.");
+
+            VariableExpr superclass = null;
+            if (Match(TokenType.COLON)) {
+                Consume(TokenType.IDENTIFIER, "Expect superclass name.");
+                superclass = new VariableExpr(ReadPrevToken());
+            }
+
+            Consume(TokenType.LEFT_BRACE, "Expect '{' before class body.");
+
+            List<FuncDeclarationStmt> methods = new List<FuncDeclarationStmt>();
+            while (Match(TokenType.FUNC)) {
+                methods.Add(MatchFuncDeclaration("method"));
+            }
+            Consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.");
+
+            return new ClassDeclarationStmt(name, superclass, methods);
+        }
+
+        private FuncDeclarationStmt MatchFuncDeclaration(string kind) {
+            Token name = Consume(TokenType.IDENTIFIER, "Expect " + kind + " name.");
+            Consume(TokenType.LEFT_PAREN, "Expect '(' after " + kind + " name.");
+            List<Token> parameters = new List<Token>();
+            if (Check(TokenType.RIGHT_PAREN) == false) {
+                do {
+                    if (parameters.Count >= 8) {
+                        ReportError("Cannot have more than 8 parameters.");
+                    }
+
+                    parameters.Add(Consume(TokenType.IDENTIFIER, "Expect parameter name."));
+                } while (Match(TokenType.COMMA));
+            }
+            Consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.");
+
+            Consume(TokenType.LEFT_BRACE, "Expect '{' before " + kind + " body.");
+            BlockStmt body = MatchBlockStmt();
+            return new FuncDeclarationStmt(name, parameters, body);
+        }
+
+        private VarDeclarationStmt MatchVarDeclaration() {
             Token name = Consume(TokenType.IDENTIFIER, "Expect variable name.");
 
             Expr initializer = null;
@@ -161,6 +240,9 @@ namespace AtomScript.Parser {
                 if (expr.GetType() == typeof(VariableExpr)) {
                     Token name = ((VariableExpr)expr).name;
                     return new AssignExpr(name, value);
+                } else if (expr.GetType() == typeof(GetExpr)) {
+                    GetExpr gexpr = (GetExpr)expr;
+                    return new SetExpr(gexpr.obj, gexpr.name, value);
                 }
 
                 ReportError("Invalid assignment target.");
@@ -248,13 +330,49 @@ namespace AtomScript.Parser {
                 return new UnaryExpr(op, right);
             }
 
-            return MatchPrimary();
+            return MatchCallExpr();
+        }
+
+        private Expr MatchCallExpr() {
+            Expr expr = MatchPrimary();
+            while (true) {
+                if (Match(TokenType.LEFT_PAREN)) {
+                    List<Expr> args = new List<Expr>();
+                    do {
+                        if (Check(TokenType.RIGHT_PAREN) == false) {
+                            if (args.Count >= 8) {
+                                ReportError("Cannot have more then 8 arguments.");
+                            }
+                            args.Add(MatchExpression());
+                        }
+                    } while (Match(TokenType.COMMA));
+                    Token paren = Consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments.");
+
+                    expr = new CallExpr(expr, paren, args);
+                } else if (Match(TokenType.DOT)) {
+                    Token name = Consume(TokenType.IDENTIFIER, "Expect property name after '.'.");
+                    expr = new GetExpr(expr, name);
+                } else {
+                    break;
+                }
+            }
+
+            return expr;
         }
 
         private Expr MatchPrimary() {
             if (MatchOne(new TokenType[] { TokenType.TRUE, TokenType.FALSE, TokenType.NIL, TokenType.NUMBER, TokenType.STRING })) {
                 return new LiteralExpr(ReadPrevToken());
             };
+
+            if (Match(TokenType.SUPER)) {
+                Token keyword = ReadPrevToken();
+                Consume(TokenType.DOT, "Expect '.' after 'super'.");
+                Token method = Consume(TokenType.IDENTIFIER, "Expect superclass method name.");
+                return new SuperExpr(keyword, method);
+            }
+
+            if (Match(TokenType.THIS)) return new ThisExpr(ReadPrevToken());
 
             if (Match(TokenType.IDENTIFIER)) return new VariableExpr(ReadPrevToken());
 
@@ -267,6 +385,8 @@ namespace AtomScript.Parser {
             ReportError("Expect expression.");
             return null;
         }
+
+
 
         private Token Consume(TokenType type, string message) {
             if (Check(type)) {

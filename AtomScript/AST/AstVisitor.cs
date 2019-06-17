@@ -5,7 +5,7 @@ namespace AtomScript.AST {
 
     abstract class AstVisitor {
 
-        public virtual void Visit(UnaryExpr expr) {
+        public virtual void Visit(AssignExpr expr) {
 
         }
 
@@ -13,7 +13,11 @@ namespace AtomScript.AST {
 
         }
 
-        public virtual void Visit(LiteralExpr expr) {
+        public virtual void Visit(CallExpr expr) {
+
+        }
+
+        public virtual void Visit(GetExpr expr) {
 
         }
 
@@ -21,7 +25,27 @@ namespace AtomScript.AST {
 
         }
 
+        public virtual void Visit(LiteralExpr expr) {
+
+        }
+
         public virtual void Visit(LogicalExpr expr) {
+
+        }
+
+        public virtual void Visit(SetExpr expr) {
+
+        }
+
+        public virtual void Visit(SuperExpr expr) {
+
+        }
+
+        public virtual void Visit(ThisExpr expr) {
+
+        }
+
+        public virtual void Visit(UnaryExpr expr) {
 
         }
 
@@ -29,11 +53,23 @@ namespace AtomScript.AST {
 
         }
 
-        public virtual void Visit(AssignExpr expr) {
+        public virtual void Visit(BlockStmt stmt) {
+
+        }
+
+        public virtual void Visit(ClassDeclarationStmt stmt) {
 
         }
 
         public virtual void Visit(ExpressionStmt stmt) {
+
+        }
+
+        public virtual void Visit(ForStmt stmt) {
+
+        }
+
+        public virtual void Visit(FuncDeclarationStmt stmt) {
 
         }
 
@@ -45,7 +81,7 @@ namespace AtomScript.AST {
 
         }
 
-        public virtual void Visit(WhileStmt stmt) {
+        public virtual void Visit(ReturnStmt stmt) {
 
         }
 
@@ -53,7 +89,7 @@ namespace AtomScript.AST {
 
         }
 
-        public virtual void Visit(BlockStmt stmt) {
+        public virtual void Visit(WhileStmt stmt) {
 
         }
     }

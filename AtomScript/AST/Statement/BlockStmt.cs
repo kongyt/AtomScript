@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using AtomScript.AST.Expression;
 
 namespace AtomScript.AST.Statement {
 

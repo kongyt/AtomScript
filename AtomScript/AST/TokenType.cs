@@ -1,4 +1,4 @@
-namespace AtomScript.Scanner {
+namespace AtomScript.AST {
 
     enum TokenType {
         UNDEFINED,                               // 未定义
@@ -15,6 +15,7 @@ namespace AtomScript.Scanner {
         SEMICOLON,                               // 分号
         SLASH,                                   // 斜线
         STAR,                                    // 星号
+        COLON,                                   // 冒号
 
         // 一个或两个字符Token
         BANG,                                    // 相反的

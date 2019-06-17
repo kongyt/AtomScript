@@ -1,12 +1,12 @@
 namespace AtomScript.AST.Expression {
 
-    class AssignExpr : Expr {
+    class GetExpr : Expr {
+        public Expr obj;
         public Token name;
-        public Expr value;
 
-        public AssignExpr(Token name, Expr value) {
+        public GetExpr(Expr obj, Token name) {
+            this.obj = obj;
             this.name = name;
-            this.value = value;
         }
 
         public override void Accept(AstVisitor visitor) {

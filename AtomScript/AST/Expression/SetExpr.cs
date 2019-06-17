@@ -1,10 +1,12 @@
 namespace AtomScript.AST.Expression {
 
-    class AssignExpr : Expr {
+    class SetExpr : Expr {
+        public Expr obj;
         public Token name;
         public Expr value;
 
-        public AssignExpr(Token name, Expr value) {
+        public SetExpr(Expr obj, Token name, Expr value) {
+            this.obj = obj;
             this.name = name;
             this.value = value;
         }

@@ -6,7 +6,7 @@ declaration -> classDecl
              | statement;
 
 classDecl   -> "class" IDENTIFIER ( ":" IDENTIFIER)?
-               "{" function* "}";
+               "{" funcDecl* "}";
 
 funcDecl    -> "func" function;
 

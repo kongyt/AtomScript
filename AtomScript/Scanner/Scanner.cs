@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using AtomScript.AST;
 
 namespace AtomScript.Scanner {
 
@@ -69,6 +70,7 @@ namespace AtomScript.Scanner {
                 case '+': MakeToken(TokenType.PLUS); break;
                 case ';': MakeToken(TokenType.SEMICOLON); break;
                 case '*': MakeToken(TokenType.STAR); break;
+                case ':': MakeToken(TokenType.COLON); break;
 
                 case '!': MakeToken(MatchChar('=') ? TokenType.BANG_EQUAL : TokenType.BANG); break;
                 case '=': MakeToken(MatchChar('=') ? TokenType.EQUAL_EQUAL : TokenType.EQUAL); break;

@@ -1,4 +1,4 @@
-namespace AtomScript.Scanner {
+namespace AtomScript.AST {
 
     class Token {
         public TokenType type;

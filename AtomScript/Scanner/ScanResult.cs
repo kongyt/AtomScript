@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using AtomScript.AST;
 
 namespace AtomScript.Scanner {
 

@@ -1,10 +1,10 @@
 namespace AtomScript.AST.Expression {
 
-    class LiteralExpr : Expr {
-        public Token literal;
+    class ThisExpr : Expr {
+        public Token keyword;
 
-        public LiteralExpr(Token literal) {
-            this.literal = literal;
+        public ThisExpr(Token keyword) {
+            this.keyword = keyword;
         }
 
         public override void Accept(AstVisitor visitor) {

@@ -1,5 +1,3 @@
-using AtomScript.Scanner;
-
 namespace AtomScript.AST.Expression {
 
     class LogicalExpr : Expr {
