@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 using AtomScript.AST.Expression;
 using AtomScript.AST.Statement;
-using AtomScript.Scanner;
 
 namespace AtomScript.AST {
     class AstPrinter : AstVisitor {
@@ -196,7 +193,6 @@ namespace AtomScript.AST {
             if (stmt.body.GetType() != typeof(BlockStmt)) {
                 whiteSpaceCount += 4;
                 NewLine();
-                AddStr(WS());
             }
             stmt.body.Accept(this);
             if (stmt.body.GetType() != typeof(BlockStmt)) {
@@ -305,7 +301,14 @@ namespace AtomScript.AST {
             AddStr("while(");
             stmt.condition.Accept(this);
             AddStr(") ");
+            if (stmt.body.GetType() != typeof(BlockStmt)) {
+                whiteSpaceCount += 4;
+                NewLine();
+            }
             stmt.body.Accept(this);
+            if (stmt.body.GetType() != typeof(BlockStmt)) {
+                whiteSpaceCount -= 4;
+            }
         }
     }
 }

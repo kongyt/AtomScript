@@ -1,8 +1,18 @@
 ﻿namespace AtomScript.Runtime {
 
-    struct Value {
+    class Value {
         public ValueType type;
         public object data;
+
+        public Value(Value value) {
+            type = value.type;
+            data = value.data;
+        }
+
+        public Value() {
+            type = ValueType.NIL;
+            data = null;
+        }
 
         public Value(bool value) {
             type = ValueType.BOOL;

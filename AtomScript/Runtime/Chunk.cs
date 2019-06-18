@@ -61,20 +61,15 @@ namespace AtomScript.Runtime {
         }
 
         public void WriteOpCode(OpCode opCode) {
-            ReadByte((byte)opCode);
+            WriteByte((byte)opCode);
         }
 
         public OpCode ReadOpCode(int offset) {
             return (OpCode)ReadByte(offset);
         }
 
-        public bool AddConstant(Value constant, out ushort addr) {
-            if (constantTable.count >= ushort.MaxValue) {
-                addr = 0x0;
-                return false;
-            }
-            addr = (ushort)constantTable.Add(constant);
-            return true;
+        public ushort AddConstant(Value constant) {
+            return (ushort)constantTable.Add(constant);
         }
 
         public Value ReadConstant(ushort addr) {

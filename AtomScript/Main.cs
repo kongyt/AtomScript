@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using AtomScript.AST;
 using AtomScript.Scanner;
 using AtomScript.Parser;
+using AtomScript.Compiler;
 using AtomScript.Runtime;
 
 namespace AtomScript
@@ -15,6 +16,9 @@ namespace AtomScript
         private Parser.Parser parser;
         private Compiler.Compiler compiler;
         private VM vm;
+
+        private Ast lastAst;
+
         static void Main(string[] args)
         {
             if (args.Length > 2) {
@@ -24,18 +28,19 @@ namespace AtomScript
 
             Program program = new Program();
             program.Start();
-            if (args.Length == 1) {
-                program.Run();
-            } else if (args.Length == 2) {
-                program.RunFile(args[1]);
-            } else {
-                program.RunFile("main.atom");
-            }
+            program.Run();
+            //if (args.Length == 1) {
+            //    program.Run();
+            //} else if (args.Length == 2) {
+            //    program.RunFile(args[1]);
+            //} else {
+            //    program.RunFile("main.atom");
+            //}
             program.Close();
         }
 
         public void Start() {
-            Console.WriteLine("Program Start.");
+            Console.WriteLine("Atom Script.");
 
             scanner = new Scanner.Scanner();
             parser = new Parser.Parser();
@@ -47,7 +52,6 @@ namespace AtomScript
 
         public void Close() {
             vm.Destroy();
-            Console.WriteLine("Program Close.");
         }
 
         public void Run() {
@@ -57,14 +61,25 @@ namespace AtomScript
                 if (code == "quit") {
                     Console.WriteLine("bye.");
                     break;
-                }
-                Interpret(code);
+                } else if (code == "debug") {
+                    vm.Debug();
+                } else if (code == "ast") {
+                    if (lastAst != null) {
+                        new AstPrinter().Print(lastAst);
+                    } else {
+                        Console.WriteLine("no ast code to print.");
+                    }                    
+                } else {
+                    Interpret(code);
+                }                
             }
         }
 
         public void RunFile(string file) {
             string code = File.ReadAllText(file);
             InterpretResult result = Interpret(code);
+            Console.Write("Press Any Key To Continue.");
+            Console.Read();
         }
 
         public InterpretResult Interpret(string source) {
@@ -88,24 +103,23 @@ namespace AtomScript
                 return InterpretResult.SYNTAX_ERROR;
             }
 
-            new AstPrinter().Print(parseRes.ast);
-
+            lastAst = parseRes.ast;
             // 编译
-            CompileResult compileResult = compiler.Compile(parseRes.ast);
-            if (compileResult.success == false) {
-                Report("CompileError:", compileResult.message);
+            CompileResult compileRes = compiler.Compile(parseRes.ast);
+            if (compileRes.success == false) {
+                List<CompileError> errors = compileRes.errors;
+                for (int i = 0; i < errors.Count; i++) {
+                    Report("CompileError:", errors[i].line, errors[i].column, errors[i].message);
+                }
                 return InterpretResult.COMPILE_ERROR;
             }
 
             // 执行
-            ExecuteResult executeResult = vm.Execute(compileResult.chunk);
+            ExecuteResult executeResult = vm.Execute(compileRes.chunk);
             if (executeResult.success == false) {
                 Report("RuntimeError:", executeResult.message);
                 return InterpretResult.RUNTIME_ERROR;
             }
-
-            Console.Write("Press Any Key To Continue.");
-            Console.Read();
             return InterpretResult.SUCCESS;
         }
 

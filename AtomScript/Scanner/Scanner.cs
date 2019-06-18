@@ -174,7 +174,7 @@ namespace AtomScript.Scanner {
                 case 'p': return MatchKeyword("rint", TokenType.PRINT);
                 case 'r': return MatchKeyword("eturn", TokenType.RETURN);
                 case 's': return MatchKeyword("uper", TokenType.SUPER);
-                case 't': return MatchKeyword("his", TokenType.THIS);
+                case 't': return MatchKeyword("his", TokenType.THIS) || MatchKeyword("rue", TokenType.TRUE); 
                 case 'v': return MatchKeyword("ar", TokenType.VAR);
                 case 'w': return MatchKeyword("hile", TokenType.WHILE);
             }

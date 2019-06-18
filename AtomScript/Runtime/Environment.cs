@@ -4,5 +4,6 @@ using System.Text;
 
 namespace AtomScript.Runtime {
     class Environment {
+
     }
 }

@@ -70,7 +70,11 @@ namespace AtomScript.Parser {
         }
 
         private Token ReadPrevToken() {
-            return tokens[current - 1];
+            if (current > 0) {
+                return tokens[current - 1];
+            } else {
+                return new Token(TokenType.EOF, "", null, 1, 0);
+            }
         }
 
         private Stmt MatchStatement() {
@@ -86,6 +90,9 @@ namespace AtomScript.Parser {
 
         private ExpressionStmt MatchExpressionStmt() {
             Expr expr = MatchExpression();
+            if (expr == null) {
+                return null;
+            }
             Consume(TokenType.SEMICOLON, "Expect ';' after expression.");
             return new ExpressionStmt(expr);
         }
@@ -133,6 +140,9 @@ namespace AtomScript.Parser {
 
         private PrintStmt MatchPrintStmt() {
             Expr expr = MatchExpression();
+            if (expr == null) {
+                return null;          
+            }
             Consume(TokenType.SEMICOLON, "Expect ';' after value.");
             return new PrintStmt(expr);
         }

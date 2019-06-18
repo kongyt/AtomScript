@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 
 using AtomScript.Runtime;
 
-namespace AtomScript {
+namespace AtomScript.Compiler {
     class CompileResult {
         public bool success;
         public Chunk chunk;
-        public string message;
+        public List<CompileError> errors;
 
-        public CompileResult(bool success, Chunk chunk, string message) {
+        public CompileResult(bool success, Chunk chunk, List<CompileError> errors) {
             this.success = success;
             this.chunk = chunk;
-            this.message = message;
+            this.errors = errors;
         }
     }
 }

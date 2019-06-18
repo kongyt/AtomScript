@@ -38,7 +38,9 @@ namespace AtomScript.Runtime {
             int newCapacity = capacity < 8 ? 8 : (capacity * 2);
             T[] buf = new T[newCapacity];
             if (oldCapacity > 0) {
-                Buffer.BlockCopy(data, 0, buf, 0, oldCapacity);
+                for (int i = 0; i < oldCapacity; i++) {
+                    buf[i] = data[i];
+                }
             }
             data = buf;
             capacity = newCapacity;
