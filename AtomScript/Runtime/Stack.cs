@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace AtomScript {
-    class ExecuteResult {
-        public bool success;
+namespace AtomScript.Runtime {
+    // 虚拟机堆栈
+    class Stack {
     }
 }

@@ -400,7 +400,7 @@ namespace AtomScript.Parser {
         private void ReportError(string message) {
             Token prevToken = ReadPrevToken();
             string whereStr = prevToken.type == TokenType.EOF ? "at end, " : ("at '" + prevToken.lexeme + "', ");
-            SyntaxError error = new SyntaxError(prevToken.line, prevToken.column, "SyntaxError: " + whereStr + message);
+            SyntaxError error = new SyntaxError(prevToken.line, prevToken.column, whereStr + message);
             errors.Add(error);
             success = false;
 

@@ -301,7 +301,7 @@ namespace AtomScript.Scanner {
 
         private void ReportError(int line, int column, string message) {
             success = false;
-            errors.Add(new LexicalError(line, column, "LexicalError: " + message));
+            errors.Add(new LexicalError(line, column, message));
         }
     }
 }

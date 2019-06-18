@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace AtomScript {
-    class ByteCode {
-
+namespace AtomScript.Runtime {
+    class Environment {
     }
 }

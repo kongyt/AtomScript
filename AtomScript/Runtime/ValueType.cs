@@ -1,5 +1,5 @@
-﻿namespace AtomScript.VM {
-    public enum ValueType {
+﻿namespace AtomScript.Runtime {
+    enum ValueType {
         BOOL,
         NIL,
         NUMBER,

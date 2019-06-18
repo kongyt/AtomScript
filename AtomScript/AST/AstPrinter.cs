@@ -16,17 +16,28 @@ namespace AtomScript.AST {
 
         public string Print(Ast ast) {
             astStr = "";
+            AddStr("\n");
+            AddStr("======================Code Begin====================\n");
+
             whiteSpaceCount = 0;
             isNewLine = true;
             ast.Accept(this);
-            Console.WriteLine(astStr);
+
+            AddStr("=======================Code End=====================\n");
+            AddStr("\n");
+            
             return astStr;
+        }
+
+        public void AddStr(string str) {
+            astStr += str;
+            Console.Write(str);
         }
 
         private void NewLine() {
             if (ignoreNewLine == false) {
                 isNewLine = true;
-                astStr += "\n";
+                AddStr("\n");
             }
         }
 
@@ -34,88 +45,88 @@ namespace AtomScript.AST {
             string rs = "";
             for (int i = 0; i < whiteSpaceCount; i++) {
                 rs += " ";
-            }
+            }            
             return rs;
         }
 
         public override void Visit(AssignExpr expr) {
-            astStr += expr.name.lexeme;
-            astStr += " = ";
+            string tempStr = expr.name.lexeme;
+            AddStr(expr.name.lexeme);
+            AddStr(" = ");
+
             expr.value.Accept(this);
         }
 
         public override void Visit(BinaryExpr expr) {
             expr.left.Accept(this);
-            astStr = astStr + " " + expr.op.lexeme + " ";
+            AddStr(" " + expr.op.lexeme + " ");
+
             expr.right.Accept(this);
         }
 
         public override void Visit(CallExpr expr) {
             expr.callee.Accept(this);
-            astStr = astStr + "(";
+            AddStr("(");
+
             for (int i = 0; i < expr.arguments.Count; i++) {
                 expr.arguments[i].Accept(this);
                 if (i != expr.arguments.Count - 1) {
-                    astStr += ", ";
+                    AddStr(", ");
                 }
             }
-            astStr += ")";
+            AddStr(")");
         }
 
         public override void Visit(GetExpr expr) {
             expr.obj.Accept(this);
-            astStr += ".";
-            astStr += expr.name.lexeme;
+            AddStr("." + expr.name.lexeme);
         }
 
         public override void Visit(GroupingExpr expr) {
-            astStr += "(";
+            AddStr("(");
             expr.expression.Accept(this);
-            astStr += ")";
+            AddStr(")");
         }
 
         public override void Visit(LiteralExpr expr) {
-            astStr += expr.literal.lexeme;
+            AddStr(expr.literal.lexeme);
         }
 
         public override void Visit(LogicalExpr expr) {
             expr.left.Accept(this);
-            astStr = astStr + " " + expr.op.lexeme + " ";
+            AddStr(" " + expr.op.lexeme + " ");
             expr.right.Accept(this);
         }
 
         public override void Visit(SetExpr expr) {
             expr.obj.Accept(this);
-            astStr += ".";
-            astStr += expr.name.lexeme;
-            astStr += " = ";
+            AddStr("." + expr.name.lexeme + " = ");
             expr.value.Accept(this);
         }
 
         public override void Visit(SuperExpr expr) {
-            astStr += "super.";
-            astStr += expr.method.lexeme;
+            AddStr("super." + expr.method.lexeme );
         }
 
         public override void Visit(ThisExpr expr) {
-            astStr += "this.";
+            AddStr("this.");
         }
 
         public override void Visit(UnaryExpr expr) {
-            astStr += expr.op.lexeme;
+            AddStr(expr.op.lexeme);
             expr.right.Accept(this);
         }
 
         public override void Visit(VariableExpr expr) {
-            astStr += expr.name.lexeme;
+            AddStr(expr.name.lexeme);
         }
 
         public override void Visit(BlockStmt stmt) {
             if (isNewLine) {
                 isNewLine = false;
-                astStr += WS();
+                AddStr(WS());
             }
-            astStr += "{";
+            AddStr("{");
             NewLine();
             whiteSpaceCount += 4;
             for (int i = 0; i < stmt.stmts.Count; i++) {
@@ -124,67 +135,68 @@ namespace AtomScript.AST {
             whiteSpaceCount -= 4;
             if (isNewLine) {
                 isNewLine = false;
-                astStr += WS();
+                AddStr(WS());
             }
-            astStr += "}";
+            AddStr("}");
             NewLine();
 
         }
 
         public override void Visit(ClassDeclarationStmt stmt) {
-            astStr += "class " + stmt.name.lexeme;
+            AddStr("class " + stmt.name.lexeme);
             if (stmt.superclass != null) {
-                astStr += " : ";
+                AddStr(" : ");
                 stmt.superclass.Accept(this);
             }
-            astStr += " {";
+            AddStr(" {");
             NewLine();
             whiteSpaceCount += 4;
             for (int i = 0; i < stmt.methods.Count; i++) {
                 stmt.methods[i].Accept(this);
             }
             whiteSpaceCount -= 4;
-            astStr += "}";
+            AddStr("}");
             NewLine();
         }
 
         public override void Visit(ExpressionStmt stmt) {
             if (isNewLine) {
                 isNewLine = false;
-                astStr += WS();
+                AddStr(WS());
             }      
             stmt.expr.Accept(this);
-            astStr += ";";
+            AddStr(";");
             NewLine();
         }
 
         public override void Visit(ForStmt stmt) {
             if (isNewLine) {
                 isNewLine = false;
-                astStr += WS();
+                AddStr(WS());
             }
             ignoreNewLine = true;
-            astStr += "for(";
+            AddStr("for(");
+
             if (stmt.initializer != null) {
                 stmt.initializer.Accept(this);
             } else {
-                astStr += ";";
+                AddStr(";");
             }
 
             if (stmt.condition != null) {
                 stmt.condition.Accept(this);
             }
-            astStr += ";";
+            AddStr(";");
 
             if (stmt.increment != null) {
                 stmt.increment.Accept(this);
             }
-            astStr += ") ";
+            AddStr(") ");
             ignoreNewLine = false;
             if (stmt.body.GetType() != typeof(BlockStmt)) {
                 whiteSpaceCount += 4;
                 NewLine();
-                astStr += WS();
+                AddStr(WS());
             }
             stmt.body.Accept(this);
             if (stmt.body.GetType() != typeof(BlockStmt)) {
@@ -195,30 +207,29 @@ namespace AtomScript.AST {
         public override void Visit(FuncDeclarationStmt stmt) {
             if (isNewLine) {
                 isNewLine = false;
-                astStr += WS();
+                AddStr(WS());
             }
-
-            astStr = astStr + "func " + stmt.name.lexeme + "(";
+            AddStr("func " + stmt.name.lexeme + "(");
             for (int i = 0; i < stmt.parameters.Count; i++) {
-                astStr += stmt.parameters[i].lexeme;
+                AddStr(stmt.parameters[i].lexeme);
 
                 if (i != stmt.parameters.Count - 1) {
-                    astStr += ", ";
+                    AddStr(", ");
                 }
             }
 
-            astStr += ")";
+            AddStr(")");
             stmt.body.Accept(this);
         }
 
         public override void Visit(IfStmt stmt) {
             if (isNewLine) {
                 isNewLine = false;
-                astStr += WS();
+                AddStr(WS());
             }
-            astStr += "if(";
+            AddStr("if(");
             stmt.condition.Accept(this);
-            astStr += ") ";
+            AddStr(") ");
 
             if (stmt.thenBranch.GetType() != typeof(BlockStmt)) {
                 whiteSpaceCount += 4;
@@ -232,9 +243,9 @@ namespace AtomScript.AST {
             if (stmt.elseBranch != null) {
                 if (isNewLine) {
                     isNewLine = false;
-                    astStr += WS();
+                    AddStr(WS());
                 }
-                astStr += "else ";
+                AddStr("else ");
                 if (stmt.elseBranch.GetType() != typeof(BlockStmt)) {
                     whiteSpaceCount += 4;
                     NewLine();
@@ -249,39 +260,39 @@ namespace AtomScript.AST {
         public override void Visit(PrintStmt stmt) {
             if (isNewLine) {
                 isNewLine = false;
-                astStr += WS();
+                AddStr(WS());
             }
-            astStr += "print ";
-            stmt.expr.Accept(this); 
-            astStr += ";";
+            AddStr("print ");
+            stmt.expr.Accept(this);
+            AddStr(";");
             NewLine();
         }
 
         public override void Visit(ReturnStmt stmt) {
             if (isNewLine) {
                 isNewLine = false;
-                astStr += WS();
+                AddStr(WS());
             }
 
-            astStr += "return";
+            AddStr("return");
             if (stmt.value != null) {
-                astStr += " ";
+                AddStr(" ");
                 stmt.value.Accept(this);
             }
-            astStr += ";";
+            AddStr(";");
             NewLine();
         }
 
         public override void Visit(VarDeclarationStmt stmt) {
             if (isNewLine) {
                 isNewLine = false;
-                astStr += WS();
+                AddStr(WS());
             }
-            astStr += "var " + stmt.name.lexeme;
+            AddStr("var " + stmt.name.lexeme);
             if (stmt.initializer != null) {
-                astStr += " = ";
+                AddStr(" = ");
                 stmt.initializer.Accept(this);
-                astStr += ";";
+                AddStr(";");
                 NewLine();
             }
         }
@@ -289,11 +300,11 @@ namespace AtomScript.AST {
         public override void Visit(WhileStmt stmt) {
             if (isNewLine) {
                 isNewLine = false;
-                astStr += WS();
+                AddStr(WS());
             }
-            astStr += "while ( ";
+            AddStr("while(");
             stmt.condition.Accept(this);
-            astStr += " ) ";
+            AddStr(") ");
             stmt.body.Accept(this);
         }
     }

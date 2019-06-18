@@ -1,6 +1,6 @@
-﻿namespace AtomScript.VM {
+﻿namespace AtomScript.Runtime {
 
-    public class ValueTable {
+    class ValueTable {
         public int count;
         public int capacity;
         public Value[] data;

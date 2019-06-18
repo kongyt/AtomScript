@@ -5,16 +5,21 @@ using System.Collections.Generic;
 using AtomScript.AST;
 using AtomScript.Scanner;
 using AtomScript.Parser;
+using AtomScript.Runtime;
 
 namespace AtomScript
 {
     class Program
     {
+        private Scanner.Scanner scanner;
+        private Parser.Parser parser;
+        private Compiler.Compiler compiler;
+        private VM vm;
         static void Main(string[] args)
         {
             if (args.Length > 2) {
                 Console.WriteLine("Usage: atom [source]");
-                Environment.Exit(1);
+                System.Environment.Exit(1);
             }
 
             Program program = new Program();
@@ -31,9 +36,17 @@ namespace AtomScript
 
         public void Start() {
             Console.WriteLine("Program Start.");
+
+            scanner = new Scanner.Scanner();
+            parser = new Parser.Parser();
+            compiler = new Compiler.Compiler();
+
+            vm = new VM();
+            vm.Init();
         }
 
         public void Close() {
+            vm.Destroy();
             Console.WriteLine("Program Close.");
         }
 
@@ -45,6 +58,7 @@ namespace AtomScript
                     Console.WriteLine("bye.");
                     break;
                 }
+                Interpret(code);
             }
         }
 
@@ -54,66 +68,53 @@ namespace AtomScript
         }
 
         public InterpretResult Interpret(string source) {
-            CompileResult compileResult = Compile(source);
+            // 扫描
+            ScanResult scanRes = scanner.ScanTokens(source);
+            if (scanRes.success == false) {
+                List<LexicalError> errors = scanRes.errors;
+                for (int i = 0; i < errors.Count; i++) {
+                    Report("LexicalError:", errors[i].line, errors[i].column, errors[i].message);
+                }
+                return InterpretResult.LEXICAL_ERROR;
+            }
+
+            // 解析
+            ParseResult parseRes = parser.Parse(scanRes.tokens);
+            if (parseRes.success == false) {
+                List<SyntaxError> errors = parseRes.errors;
+                for (int i = 0; i < errors.Count; i++) {
+                    Report("SyntaxError:", errors[i].line, errors[i].column, errors[i].message);
+                }
+                return InterpretResult.SYNTAX_ERROR;
+            }
+
+            new AstPrinter().Print(parseRes.ast);
+
+            // 编译
+            CompileResult compileResult = compiler.Compile(parseRes.ast);
             if (compileResult.success == false) {
+                Report("CompileError:", compileResult.message);
                 return InterpretResult.COMPILE_ERROR;
             }
 
-            ExecuteResult executeResult = Execute(compileResult.byteCode);
+            // 执行
+            ExecuteResult executeResult = vm.Execute(compileResult.chunk);
             if (executeResult.success == false) {
+                Report("RuntimeError:", executeResult.message);
                 return InterpretResult.RUNTIME_ERROR;
             }
 
+            Console.Write("Press Any Key To Continue.");
+            Console.Read();
             return InterpretResult.SUCCESS;
         }
 
-        private CompileResult Compile(string source) {
-            CompileResult result = new CompileResult();
-
-            Scanner.Scanner scanner = new Scanner.Scanner();
-            ScanResult scanRes = scanner.ScanTokens(source);
-            Console.WriteLine("=========== Tokens ==========");
-            List<Token> tokens = scanRes.tokens;
-            for (int i = 0; i < tokens.Count; i++) {
-                Console.WriteLine("" + tokens[i].line + " " + tokens[i].column + " " + tokens[i].type + " " + tokens[i].lexeme);
-            }
-
-            if (scanRes.success) {
-                Parser.Parser parser = new Parser.Parser();
-                ParseResult parseRes = parser.Parse(scanRes.tokens);
-                if (parseRes.success) {
-                    Console.WriteLine("=========== Code ==========");
-                    Ast ast= parseRes.ast;
-                    new AstPrinter().Print(ast);
-                    Console.WriteLine("============ End ==========");
-
-                    result.success = true;
-                } else {
-                    result.success = false;
-                    List<SyntaxError> errors = parseRes.errors;
-                    for (int i = 0; i < errors.Count; i++) {
-                        Report(errors[i].line, errors[i].column, errors[i].message);
-                    }
-                }
-            } else {
-                result.success = false;
-                List<LexicalError> errors = scanRes.errors;
-                for (int i = 0; i < errors.Count; i++) {
-                    Report(errors[i].line, errors[i].column, errors[i].message);
-                }
-            }
-
-            return result;
+        public void Report(string prefix, int line, int column, string message) {
+            Report(prefix, "[position " + line + ":" + column + "] " +message);
         }
 
-        private ExecuteResult Execute(ByteCode byteCode) {
-            ExecuteResult result = new ExecuteResult();
-            result.success = true;
-            return result;
-        }
-
-        public void Report(int line, int column, string message) {
-            Console.WriteLine("[position " + line + ":" + column + "] " +message);
+        public void Report(string prefix, string message) {
+            Console.WriteLine(prefix + " " + message);
         }
     }
 }

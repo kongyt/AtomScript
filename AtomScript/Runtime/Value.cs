@@ -1,9 +1,6 @@
-﻿namespace AtomScript.VM {
-    public class Obj {
+﻿namespace AtomScript.Runtime {
 
-    }
-
-    public struct Value {
+    struct Value {
         public ValueType type;
         public object data;
 
